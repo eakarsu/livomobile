@@ -1,0 +1,72 @@
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+  
+<hibernate-configuration>
+	<session-factory>
+<!-- 	        <property name="driverClassName" value="org.postgresql.Driver"/> -->
+<!--         <property name="url" value="jdbc:postgresql://localhost:5432/livocloud"/> -->
+<!--         <property name="username" value="postgres"/> -->
+<!--         <property name="password" value="root"/> -->
+	    
+	    
+		<property name="connection.driver_class">
+			org.postgresql.Driver
+		</property>
+		<property name="connection.url">
+			jdbc:postgresql://localhost:5432/livocloud
+		</property>
+<!-- 		<property name="connection.url"> -->
+<!-- 			jdbc:postgresql://127.0.0.1:5432/localcorporategames?createDatabaseIfNotExist=true -->
+<!-- 		</property> -->
+		<property name="connection.username">
+			postgres
+		</property>
+		<property name="connection.password">
+			root
+		</property>
+		<property name="hibernate.hbm2ddl.auto">update
+		</property>
+
+		<!-- SQL dialect -->
+		<property name="dialect">
+			org.hibernate.dialect.PostgreSQLDialect
+		</property>
+		<!-- Disable the second-level cache -->
+		<property name="cache.provider_class">
+			org.hibernate.cache.internal.NoCacheProvider
+		</property>
+		<!-- Echo all executed SQL to stdout -->
+		<property name="show_sql">
+			true
+		</property>
+
+		<mapping class="tr.com.globit.corporategames.entity.AccountActivity" />
+		<mapping class="tr.com.globit.corporategames.entity.ApplicationForm" />
+		<mapping class="tr.com.globit.corporategames.entity.Branch" />
+		<mapping class="tr.com.globit.corporategames.entity.BranchCategory" />
+		<mapping class="tr.com.globit.corporategames.entity.BranchParticipant" />
+		<mapping class="tr.com.globit.corporategames.entity.Company" />
+		<mapping class="tr.com.globit.corporategames.entity.CompanyApplication" />
+		<mapping class="tr.com.globit.corporategames.entity.Competition" />
+		<mapping class="tr.com.globit.corporategames.entity.Country" />
+		<mapping class="tr.com.globit.corporategames.entity.Email" />
+		<mapping class="tr.com.globit.corporategames.entity.Group" />
+		<mapping class="tr.com.globit.corporategames.entity.GroupEvent" />
+		<mapping class="tr.com.globit.corporategames.entity.Organiser" />
+		<mapping class="tr.com.globit.corporategames.entity.Organization" />
+		<mapping class="tr.com.globit.corporategames.entity.Participant" />
+		<mapping class="tr.com.globit.corporategames.entity.ParticipantEmail" />
+		<mapping class="tr.com.globit.corporategames.entity.Sport" />
+		<mapping class="tr.com.globit.corporategames.entity.SportCategory" />
+		<mapping class="tr.com.globit.corporategames.entity.SportLogo" />
+		<mapping class="tr.com.globit.corporategames.entity.Team" />
+		<mapping class="tr.com.globit.corporategames.entity.SmtpSettings" />
+		<mapping class="tr.com.globit.corporategames.entity.PasswordSetRecord" />
+		<mapping class="tr.com.globit.corporategames.entity.GlobalSettings" />
+		<mapping class="tr.com.globit.corporategames.entity.AgreementSetting" />
+		
+		<mapping class="tr.com.globit.corporategames.entity.CompanyEmail" />
+
+<!-- 		<mapping class="tr.com.globit.corporategames.test.Testusers" /> -->
+		
+	</session-factory>
+</hibernate-configuration>

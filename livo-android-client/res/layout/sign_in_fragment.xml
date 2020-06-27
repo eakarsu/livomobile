@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<fragment
+    android:name="tr.com.eno.livo.SignInFragment"
+    android:id="@+id/user_fragment"
+    android:layout_weight="3"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android" />

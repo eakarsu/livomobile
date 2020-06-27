@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/company_login_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:gravity="center_horizontal"
+        android:textStyle="italic"
+        android:hint="@string/company_id"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp">
+
+        <requestFocus />
+    </EditText>
+
+    <EditText
+        android:id="@+id/company_login_secret"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/company_secret"
+        android:singleLine="true"
+        android:gravity="center_horizontal"
+        android:textStyle="italic"
+        android:inputType="textPassword"
+        android:layout_marginRight="20dp"
+        android:layout_marginLeft="20dp" />
+
+    <Button
+        android:id="@+id/company_login"
+        android:layout_width="142dp"
+        android:background="@android:color/transparent"
+        android:layout_height="wrap_content"
+        android:text="@string/company_continue"
+        android:textStyle="bold"
+        />
+
+</LinearLayout>

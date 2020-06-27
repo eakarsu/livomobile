@@ -1,0 +1,25 @@
+# Uncomment this line to define a global platform for your project
+platform :ios, '9.3'
+
+target 'Livo' do
+
+pod 'Tweaks', '~> 2.0'
+pod 'Shimmer', '~> 1.0'
+pod 'pop', '~> 1.0'
+pod 'thrift', '~> 0.9.3'
+pod 'SSKeychain', '~> 1.2.3'
+pod 'LogKit', '~> 2.0'
+pod 'Cordova', '~> 3.8'
+pod 'SSZipArchive', '~> 1.0.1'
+
+use_frameworks!
+
+end
+
+target 'LivoTests' do
+
+end
+workspace 'Livo'
+workspace 'LivoTests'
+
+

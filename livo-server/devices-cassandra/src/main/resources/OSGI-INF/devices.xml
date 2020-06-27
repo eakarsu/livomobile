@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0"
+               name="com.livo.devices.cassandra.CassandraDevicesService"
+               scr:xmlns="http://www.osgi.org/xmlns/scr/v1.1.0/scr" activate="start"
+               deactivate="stop" immediate="true">
+    <implementation
+        class="com.livo.devices.cassandra.CassandraDevicesService" />
+    <property name="service.pid" type="String"
+                  value="com.livo.devices.cassandra.CassandraDevicesService" />
+    <property name="cassandra.host" type="String" value="localhost" />
+    <property name="cassandra.port" type="Integer" value="9042" />
+    <service>
+        <provide interface="com.livo.devices.DevicesService" />
+    </service>
+</scr:component>
+
+

@@ -1,0 +1,86 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+   http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/context
+   http://www.springframework.org/schema/context/spring-context-3.0.xsd
+      http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
+
+	<bean id="userDelegate" class="tr.com.eno.livo.cloud.delegate.UserDelegate">
+		<property name="userService" ref="userService"></property>
+	</bean>
+	<bean id="pendingRequestDelegate" class="tr.com.eno.livo.cloud.delegate.PendingRequestDelegate">
+		<property name="pendingRequestService" ref="pendingRequestService"></property>
+	</bean>
+	<bean id="platformDelegate" class="tr.com.eno.livo.cloud.delegate.PlatformDelegate">
+		<property name="platformService" ref="platformService"></property>
+	</bean>
+	<bean id="transactionHistoryDelegate"
+		class="tr.com.eno.livo.cloud.delegate.TransactionHistoryDelegate">
+		<property name="transactionHistoryService" ref="transactionHistoryService"></property>
+	</bean>
+	<bean id="supportDelegate" class="tr.com.eno.livo.cloud.delegate.SupportDelegate">
+		<property name="supportService" ref="supportService"></property>
+	</bean>
+
+
+	<bean id="userService" class="tr.com.eno.livo.cloud.service.impl.UserServiceImpl">
+		<property name="userDao" ref="userDao"></property>
+	</bean>
+	<bean id="pendingRequestService"
+		class="tr.com.eno.livo.cloud.service.impl.PendingRequestServiceImpl">
+		<property name="pendingRequestDao" ref="pendingRequestDao"></property>
+	</bean>
+	<bean id="platformService" class="tr.com.eno.livo.cloud.service.impl.PlatformServiceImpl">
+		<property name="platformDao" ref="platformDao"></property>
+	</bean>
+	<bean id="transactionHistoryService"
+		class="tr.com.eno.livo.cloud.service.impl.TransactionHistoryServiceImpl">
+		<property name="transactionHistoryDao" ref="transactionHistoryDao"></property>
+	</bean>
+	<bean id="supportService" class="tr.com.eno.livo.cloud.service.impl.SupportServiceImpl">
+		<property name="supportDao" ref="supportDao"></property>
+	</bean>
+	<!-- <bean id="seatService" class="tr.com.eno.livo.cloud.service.impl.SeatServiceImpl"> -->
+	<!-- <property name="seatDao" ref="seatDao"></property> -->
+	<!-- </bean> -->
+
+
+	<!-- DAO implementation beans -->
+	<bean name="userDao" class="tr.com.eno.livo.cloud.dao.impl.UserDaoImpl">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean name="pendingRequestDao" class="tr.com.eno.livo.cloud.dao.impl.PendingRequestDaoImpl">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean name="platformDao" class="tr.com.eno.livo.cloud.dao.impl.PlatformDaoImpl">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean name="transactionHistoryDao"
+		class="tr.com.eno.livo.cloud.dao.impl.TransactionHistoryDaoImpl">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean name="seatDao" class="tr.com.eno.livo.cloud.dao.impl.SeatDaoImpl">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean name="supportDao" class="tr.com.eno.livo.cloud.dao.impl.SupportDaoImpl">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="org.postgresql.Driver" />
+		<property name="url" value="jdbc:postgresql://localhost:5433/livocloud" />
+		<property name="username" value="postgres" />
+		<property name="password" value="postgres" />
+	</bean>
+
+	<bean id="user" class="tr.com.eno.livo.cloud.entity.User" scope="session">
+		<aop:scoped-proxy />
+	</bean>
+
+</beans>

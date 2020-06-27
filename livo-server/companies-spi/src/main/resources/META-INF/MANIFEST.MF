@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Livo Server - Companies SPI
+Bundle-SymbolicName: com.livo.companies
+Bundle-Version: 1.0.0
+Bundle-Vendor: Livo
+Import-Package: org.osgi.framework,
+ org.slf4j;version="1.7.2"
+Export-Package: com.livo.companies;version="1.0.0"
