@@ -100,7 +100,7 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService 
     }
 
     @Override
-    public AuthenticationToken login(AuthenticationToken companyAuthToken, String id, String secret) throws SecurityException {
+    public AuthenticationToken login(AuthenticationToken companyAuthToken, String id, String secret,String appName) throws SecurityException {
 
         if (!this.isConfigured) {
             throw new RuntimeException("LDAPAuthentication service is not enabled yet.");
