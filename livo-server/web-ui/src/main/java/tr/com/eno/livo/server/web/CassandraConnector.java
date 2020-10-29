@@ -5,8 +5,7 @@ import com.datastax.driver.core.Session;
 
 
 public class CassandraConnector {
-    
-    private final static String HOST = "localhost";
+    private final static String HOST =  "localhost";
     private final static int PORT = 9042;
     private  Cluster cluster = null;
     private  Session session = null;

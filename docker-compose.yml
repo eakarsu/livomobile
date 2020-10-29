@@ -1,0 +1,42 @@
+version: "3.7"
+services:
+
+ server:
+   network_mode: host
+   image: eakarsun3/livoserver
+   ports:
+    - "6667:6667"
+    - "9042:9042"
+    - "2366:2366"
+   expose:
+    - "6667"
+    - "9042"
+    - "2366"
+   volumes:
+    - type: volume
+      source: aeon_home
+      target: /var/opt/livod
+   healthcheck:
+    test: ["CMD","curl", "-f","http://localhost:6667"]
+    interval: 30s
+    timeout: 10s
+    retries: 10
+ web:
+  network_mode: host
+  image: eakarsun3/livowebui
+  depends_on:
+    - server
+  ports:
+   - "8080:8080"
+   - "9091:9091"
+  volumes:
+    - type: volume
+      source: aeon_home
+      target: /var/opt/livod
+  environment:
+   - LIVO_SERVER_HOST=localhost
+   
+volumes:
+ aeon_home:
+   
+  

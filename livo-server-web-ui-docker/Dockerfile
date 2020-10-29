@@ -1,4 +1,4 @@
-FROM tomcat:8-jre7
+FROM tomcat:8-jre8
 MAINTAINER Deniz Acay <deniz@livomobile.com>
 
 RUN rm -rf /usr/local/tomcat/webapps/ROOT
