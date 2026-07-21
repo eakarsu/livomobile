@@ -82,7 +82,7 @@ var ComponentsDropdowns = function () {
                     return {
                         q: term, // search term
                         page_limit: 10,
-                        apikey: "ju6z9mjyajq2djue3gbvv26t" // please do not use so this example keeps working
+                        apikey: "" // please do not use so this example keeps working
                     };
                 },
                 results: function (data, page) { // parse the results into the format expected by Select2.
@@ -100,7 +100,7 @@ var ComponentsDropdowns = function () {
                 if (id !== "") {
                     $.ajax("http://api.rottentomatoes.com/api/public/v1.0/movies/" + id + ".json", {
                         data: {
-                            apikey: "ju6z9mjyajq2djue3gbvv26t"
+                            apikey: ""
                         },
                         dataType: "jsonp"
                     }).done(function (data) {
@@ -197,7 +197,7 @@ var ComponentsDropdowns = function () {
                     return {
                         q: term, // search term
                         page_limit: 10,
-                        apikey: "ju6z9mjyajq2djue3gbvv26t" // please do not use so this example keeps working
+                        apikey: "" // please do not use so this example keeps working
                     };
                 },
                 results: function (data, page) { // parse the results into the format expected by Select2.
@@ -215,7 +215,7 @@ var ComponentsDropdowns = function () {
                 if (id !== "") {
                     $.ajax("http://api.rottentomatoes.com/api/public/v1.0/movies/" + id + ".json", {
                         data: {
-                            apikey: "ju6z9mjyajq2djue3gbvv26t"
+                            apikey: ""
                         },
                         dataType: "jsonp"
                     }).done(function (data) {

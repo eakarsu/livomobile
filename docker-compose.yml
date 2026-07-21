@@ -1,42 +1,40 @@
-version: "3.7"
-services:
+name: livomobile-governed-matter
 
- server:
-   network_mode: host
-   image: eakarsun3/livoserver
-   ports:
-    - "6667:6667"
-    - "9042:9042"
-    - "2366:2366"
-   expose:
-    - "6667"
-    - "9042"
-    - "2366"
-   volumes:
-    - type: volume
-      source: aeon_home
-      target: /var/opt/livod
-   healthcheck:
-    test: ["CMD","curl", "-f","http://localhost:6667"]
-    interval: 30s
-    timeout: 10s
-    retries: 10
- web:
-  network_mode: host
-  image: eakarsun3/livowebui
-  depends_on:
-    - server
-  ports:
-   - "8080:8080"
-   - "9091:9091"
-  volumes:
-    - type: volume
-      source: aeon_home
-      target: /var/opt/livod
-  environment:
-   - LIVO_SERVER_HOST=localhost
-   
+services:
+  governed-matter:
+    build:
+      context: ./governed-matter
+    image: livomobile-governed-matter:local
+    init: true
+    user: "10001:10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3030"
+      DATABASE_PATH: /var/lib/livomobile/matters.sqlite
+      MIGRATE_ON_START: "true"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      IDEMPOTENCY_SECRET: ${IDEMPOTENCY_SECRET:?set IDEMPOTENCY_SECRET}
+      DOCUMENT_PROVIDER_URL: ${DOCUMENT_PROVIDER_URL:?set DOCUMENT_PROVIDER_URL}
+      DOCUMENT_PROVIDER_SECRET: ${DOCUMENT_PROVIDER_SECRET:?set DOCUMENT_PROVIDER_SECRET}
+      DOCUMENT_PROVIDER_TIMEOUT_MS: ${DOCUMENT_PROVIDER_TIMEOUT_MS:-3000}
+      DOCUMENT_PROVIDER_MAX_ATTEMPTS: ${DOCUMENT_PROVIDER_MAX_ATTEMPTS:-3}
+    ports:
+      - "127.0.0.1:${LIVOMOBILE_PORT:-3030}:3030"
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    volumes:
+      - governed_matter_data:/var/lib/livomobile
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
- aeon_home:
-   
-  
+  governed_matter_data:
+    name: livomobile_governed_matter_data

@@ -1,0 +1,105 @@
+name: governed-matter
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: governed-matter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      PORT: "3030"
+      DATABASE_PATH: /tmp/livomobile-ci.sqlite
+      MIGRATE_ON_START: "false"
+      ALLOWED_ORIGINS: https://legal.example
+      DOCUMENT_PROVIDER_URL: https://provider.example/v1/operations
+      DOCUMENT_PROVIDER_TIMEOUT_MS: "500"
+      DOCUMENT_PROVIDER_MAX_ATTEMPTS: "1"
+      TOKEN_ORGANIZATION_SLUG: ci-tenant
+      TOKEN_ORGANIZATION_NAME: CI Tenant
+      TOKEN_LABEL: ci-author
+      TOKEN_ROLE: AUTHOR
+      TOKEN_TTL_DAYS: "1"
+      TOKEN_OUTPUT_PATH: /tmp/livomobile-ci-token
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: governed-matter/package-lock.json
+
+      - name: Generate ephemeral workflow credentials
+        run: |
+          echo "IDEMPOTENCY_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "DOCUMENT_PROVIDER_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Install exact dependencies
+        working-directory: governed-matter
+        run: npm ci
+
+      - name: Unit and HTTP/database integration tests
+        working-directory: governed-matter
+        run: npm run check
+
+      - name: Dependency audit
+        working-directory: governed-matter
+        run: |
+          npm audit --audit-level=low
+          npm audit --omit=dev --audit-level=low
+
+      - name: Migration, token, integrity, backup, and restore drill
+        working-directory: governed-matter
+        run: |
+          rm -f "$DATABASE_PATH" "$DATABASE_PATH-wal" "$DATABASE_PATH-shm" "$TOKEN_OUTPUT_PATH" /tmp/matter.backup /tmp/matter.restore
+          npm run db:migrate
+          npm run db:migrate
+          npm run token:create
+          test "$(stat -c '%a' "$TOKEN_OUTPUT_PATH")" = "600"
+          npm run db:verify
+          npm run backup -- /tmp/matter.backup
+          npm run restore:verify -- /tmp/matter.backup /tmp/matter.restore
+
+      - name: Live readiness, auth, and origin smoke
+        working-directory: governed-matter
+        run: |
+          node src/index.mjs >/tmp/livomobile-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:3030/health/ready >/dev/null && break
+            sleep 0.2
+          done
+          curl --fail --silent http://127.0.0.1:3030/health/live >/dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3030/v1/audit/verify)" = "401"
+          token="$(tr -d '\n' < "$TOKEN_OUTPUT_PATH")"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' -H "Authorization: Bearer $token" -H 'Origin: https://evil.example' http://127.0.0.1:3030/v1/audit/verify)" = "403"
+
+      - name: Assert retired credential-bearing handlers stay absent
+        run: |
+          test ! -e livo-server-web-ui/src/main/webapp/WEB-INF/frameworkfiles/templates/jquery/CorporateTempl/bat/MailHandler.php
+          test ! -e livo-server-web-ui/src/main/webapp/WEB-INF/frameworkfiles/templates/jquery/emdot/assets/js/grabtweets.php
+          test ! -e livo-server/web-ui/src/main/webapp/WEB-INF/frameworkfiles/templates/jquery/CorporateTempl/bat/MailHandler.php
+          test ! -e livo-server/web-ui/src/main/webapp/WEB-INF/frameworkfiles/templates/jquery/emdot/assets/js/grabtweets.php
+
+      - name: Current-tree and history secret gates
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 dir /repo --config /repo/.gitleaks.toml --redact
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --config /repo/.gitleaks.toml --redact
+
+      - name: Compose and container build
+        run: |
+          docker compose config --quiet
+          docker build --pull --tag livomobile-governed-matter:ci governed-matter

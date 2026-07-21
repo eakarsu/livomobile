@@ -1,0 +1,20 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Historical commits with revoked credentials; future commits are not allowlisted"
+commits = [
+  "ebcdaaf5931400739f11cb7759227cfde2db62a2",
+  "f8d76c15129bf27903ce0266517c2774e42798f0",
+]
+
+[[allowlists]]
+description = "CocoaPods dependency checksum, not a credential"
+condition = "AND"
+regexTarget = "line"
+paths = [
+  '''^livo-ios-client/Podfile\.lock$''',
+]
+regexes = [
+  '''^  SSKeychain: [a-f0-9]{40}\r?$''',
+]

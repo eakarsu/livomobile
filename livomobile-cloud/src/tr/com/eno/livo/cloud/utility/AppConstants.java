@@ -16,7 +16,7 @@ public class AppConstants {
 
 	public static final Calendar tzUTC = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-	public static final String API_KEY = "key-a4534a40afcadf3aa881c3eb9e45fa26";
+	public static final String API_KEY = System.getenv("LIVOMOBILE_MAILGUN_API_KEY");
 
 	public static final String MAILGUN_API_URL = "https://api.mailgun.net/v3/mailgun.livomobile.com/messages";
 
@@ -34,9 +34,9 @@ public class AppConstants {
 
 	private static String MAIL_FROM = "Livo Corporate <postmaster@mailgun.livomobile.com>";
 
-	public static String PAYPAL_CLIENT_ID = "Ac6LzzNShQC7AgIqAc8G9WIMvYuFBR8oaHLf9yLMBjuxy5Lw_VkWDT61NLc6hp-kIwvp7384f01RZrtL";
+	public static String PAYPAL_CLIENT_ID = System.getenv("LIVOMOBILE_PAYPAL_CLIENT_ID");
 
-	public static String PAYPAL_CLIENT_SECRET = "EKJUXvH1qevNGi90KIdryPsAPjxvjaKPBIlbngs7CePySCA8nEGMwzKiNWvz0N7vJz314wCwMGAQQR7G";
+	public static String PAYPAL_CLIENT_SECRET = System.getenv("LIVOMOBILE_PAYPAL_CLIENT_SECRET");
 
 	public static String PAYPAL_PAYMENT_CANCEL_METHOD = "/pricing/paypalPayment/returnFail";
 

@@ -177,9 +177,9 @@ public class LoginController {
 
 			Map<String, String> sdkConfig = new HashMap<String, String>();
 			sdkConfig.put("mode", "live");
-			sdkConfig.put("acct1.UserName", "info_api1.livomobile.com");
-			sdkConfig.put("acct1.Password", "HSDCU7JA2RC88NWU");
-			sdkConfig.put("acct1.Signature", "AFcWxV21C7fd0v3bYYYRCpSSRl31A9ELejSe-uqHvUxa6nEsbAmPWUoQ");
+			sdkConfig.put("acct1.UserName", System.getenv("LIVOMOBILE_PAYPAL_USERNAME"));
+			sdkConfig.put("acct1.Password", System.getenv("LIVOMOBILE_PAYPAL_PASSWORD"));
+			sdkConfig.put("acct1.Signature", System.getenv("LIVOMOBILE_PAYPAL_SIGNATURE"));
 			PayPalAPIInterfaceServiceService service = new PayPalAPIInterfaceServiceService(sdkConfig);
 			String sandboxUrl = "https://www.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=", monthlyURL = "", annualURL = "";
 			try {

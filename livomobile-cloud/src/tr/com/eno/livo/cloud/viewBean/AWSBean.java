@@ -24,7 +24,7 @@ public class AWSBean {
 
         LOGGER.debug("Initializing AWS client...");
 
-        client = new AmazonEC2AsyncClient(new BasicAWSCredentials("AKIAJ3IUBXE575SV56DQ", "QCmbKPLnxVb841Z6tSvQ0b0ON+V4Nzr917d03yjE"));
+        client = new AmazonEC2AsyncClient(new BasicAWSCredentials(System.getenv("LIVOMOBILE_AWS_ACCESS_KEY_ID"), System.getenv("LIVOMOBILE_AWS_SECRET_ACCESS_KEY")));
         client.setRegion(Region.getRegion(Regions.EU_WEST_1));
     }
 

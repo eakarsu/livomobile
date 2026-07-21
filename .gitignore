@@ -1,0 +1,9 @@
+.DS_Store
+.env
+governed-matter/node_modules/
+governed-matter/*.sqlite
+governed-matter/*.sqlite-*
+governed-matter/*.backup
+governed-matter/backups/
+governed-matter/coverage/
+governed-matter/.tokens/

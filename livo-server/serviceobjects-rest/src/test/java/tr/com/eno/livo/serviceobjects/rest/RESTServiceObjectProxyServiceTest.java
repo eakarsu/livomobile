@@ -51,7 +51,7 @@ public class RESTServiceObjectProxyServiceTest {
         ServiceDescription countriesService = new ServiceDescription();
         countriesService.setName("Countries");
         countriesService.setBaseUrl("https://restcountries-v1.p.mashape.com");
-        countriesService.getDefaultHeaders().add(new Header("X-Mashape-Key", "I0KYYNi6q7mshmUZq7YW1kGShPX0p1VApbVjsn7CmsprYIuB3m"));
+        countriesService.getDefaultHeaders().add(new Header("X-Test-Api-Key", "test-fixture"));
         countriesService.getOperations().add(new Operation("getAll", "all", HttpMethod.GET));
         countriesService.getOperations().add(new Operation("getByCode", "alpha/{code}", HttpMethod.GET, new Parameter("code", null, true, ParameterType.ROUTE,null,false)));
         countriesService.getOperations().add(new Operation("getByCodes", "alpha", HttpMethod.GET, new Parameter("codes", null, true, ParameterType.QUERY,null,false)));
@@ -73,7 +73,7 @@ public class RESTServiceObjectProxyServiceTest {
         ServiceDescription emailValidateService = new ServiceDescription();
         emailValidateService.setName("E-Mail Validate");
         emailValidateService.setBaseUrl("https://community-neutrino-email-validate.p.mashape.com/");
-        emailValidateService.getDefaultHeaders().add(new Header("X-Mashape-Key", "I0KYYNi6q7mshmUZq7YW1kGShPX0p1VApbVjsn7CmsprYIuB3m"));
+        emailValidateService.getDefaultHeaders().add(new Header("X-Test-Api-Key", "test-fixture"));
         emailValidateService.getOperations().add(new Operation("validate", "email-validate", HttpMethod.POST, new Parameter("email", null, true, ParameterType.FORM,null,false)));
 
         ObjectMapper objectMapper = new ObjectMapper();
