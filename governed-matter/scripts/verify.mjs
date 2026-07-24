@@ -10,7 +10,8 @@ export function verifyDatabase(database) {
   const foreignKeys = database.prepare("PRAGMA foreign_key_check").all();
   if (foreignKeys.length) throw new Error(`Foreign-key violations: ${foreignKeys.length}`);
   for (const trigger of ["audit_events_no_update", "audit_events_no_delete", "document_versions_content_immutable",
-    "document_versions_no_delete", "authoritative_templates_no_update", "authoritative_templates_no_delete"]) {
+    "document_versions_no_delete", "authoritative_templates_no_update", "authoritative_templates_no_delete",
+    "ai_interactions_terminal_immutable", "ai_interactions_no_delete"]) {
     if (!database.prepare("SELECT name FROM sqlite_master WHERE type = 'trigger' AND name = ?").get(trigger)) throw new Error(`Missing database control: ${trigger}`);
   }
   const organizations = database.prepare("SELECT id, slug FROM organizations ORDER BY slug").all();

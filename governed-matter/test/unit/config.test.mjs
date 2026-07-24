@@ -19,4 +19,5 @@ test("production refuses a non-HTTPS document provider", () => {
 test("database paths and origins fail closed", () => {
   assert.throws(() => loadConfig({ ...base, DATABASE_PATH: "relative.sqlite" }), /must be absolute/);
   assert.throws(() => loadConfig({ ...base, ALLOWED_ORIGINS: "https://legal.example/path" }), /Invalid ALLOWED_ORIGINS/);
+  assert.throws(() => loadConfig({ ...base, OPENROUTER_BASE_URL: "https://example.invalid/v1" }), /canonical/);
 });

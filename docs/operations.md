@@ -8,6 +8,8 @@
 4. Run `npm run db:verify`, then start the service. `MIGRATE_ON_START=true` is suitable for the single-instance Compose topology; coordinated multi-instance deployment must run migration as a separate one-shot job.
 5. Require `/health/live` and `/health/ready` to pass. Readiness requires verified migrations and at least one unexpired active token.
 
+The root launcher sources its ignored `.env`, runs the checksum-verified migrations, and idempotently verifies or creates the configured credential user before binding the assigned port. After startup, verify anonymous denial, credential login, `/v1/auth/me`, and logout/revocation. When AI is enabled, record the returned interaction ID and verify its provider receipt and output through `/v1/ai/interactions/:interactionId`; never log bearer sessions or provider credentials.
+
 The root Compose file runs as UID 10001, drops all capabilities, uses a read-only root filesystem and named database volume, binds only to loopback by default, and caps local logs. Terminate TLS at the ingress and restrict provider egress by DNS and network policy.
 
 ## Monitoring and response

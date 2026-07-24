@@ -1,9 +1,14 @@
 import { randomUUID } from "node:crypto";
 import express from "express";
 import helmet from "helmet";
+import { z } from "zod";
 import { verifyAudit } from "./audit.mjs";
+import {
+  authenticateCredentials, createCredentialSession, parseSessionBearer, revokeCredentialSession, sessionPrincipal,
+} from "./credentials.mjs";
 import { HttpError } from "./errors.mjs";
 import { verifyMigrations } from "./migrations.mjs";
+import { invokeOpenRouter, OpenRouterError } from "./openrouter.mjs";
 import { parseBearer, tokenDigest } from "./security.mjs";
 import {
   createDocument, createDocumentVersion, createMatter, disposeDocument, exportMatter, fileDocument,
@@ -16,6 +21,15 @@ const send = (res, result) => {
   if (result.replayed) res.setHeader("Idempotent-Replay", "true");
   return res.status(result.status).json(result.body);
 };
+const loginSchema = z.object({ email: z.string().email().max(254), password: z.string().min(12).max(256) }).strict();
+const aiRequestSchema = z.object({ prompt: z.string().trim().min(3).max(12_000) }).strict();
+
+function identityBody(principal) {
+  return {
+    userId: principal.userId, email: principal.email, organizationId: principal.organizationId,
+    organizationSlug: principal.organizationSlug, role: principal.role, authType: principal.authType,
+  };
+}
 
 export function createApp({ database, config, fetchImplementation = fetch, logger = console }) {
   const app = express();
@@ -26,7 +40,7 @@ export function createApp({ database, config, fetchImplementation = fetch, logge
     const started = Date.now();
     res.on("finish", () => logger.info?.(JSON.stringify({ event: "http_request", requestId: req.requestId,
       method: req.method, path: req.path, status: res.statusCode, durationMs: Date.now() - started,
-      actorTokenId: req.principal?.tokenId ?? null })));
+      actorTokenId: req.principal?.tokenId ?? null, credentialUserId: req.principal?.userId ?? null })));
     next();
   });
   app.use((req, res, next) => {
@@ -52,20 +66,88 @@ export function createApp({ database, config, fetchImplementation = fetch, logge
     res.status(ready ? 200 : 503).json({ status: ready ? "ready" : "not_ready", migrations, activeTokens: Number(activeTokens) });
   });
 
+  app.post("/v1/auth/login", (req, res, next) => {
+    try {
+      const parsed = loginSchema.safeParse(req.body);
+      const user = parsed.success ? authenticateCredentials(database, parsed.data.email, parsed.data.password) : null;
+      if (!user) throw new HttpError(401, "INVALID_CREDENTIALS", "The email or password is invalid");
+      const session = createCredentialSession(database, user, config.sessionTtlHours);
+      res.setHeader("Cache-Control", "no-store");
+      res.json({
+        accessToken: session.token, tokenType: "Bearer", expiresAt: session.expiresAt.toISOString(),
+        identity: { userId: user.id, email: user.email, organizationId: user.organization_id,
+          organizationSlug: user.organization_slug, role: user.role, authType: "SESSION" },
+      });
+    } catch (error) { next(error); }
+  });
+
   function authenticate(req, _res, next) {
+    const sessionToken = parseSessionBearer(req.get("Authorization"));
+    const credentialPrincipal = sessionToken ? sessionPrincipal(database, sessionToken) : null;
+    if (credentialPrincipal) { req.principal = credentialPrincipal; return next(); }
     const token = parseBearer(req.get("Authorization"));
-    const row = token ? database.prepare(`SELECT id, organization_id, label, role, active, expires_at
-      FROM api_tokens WHERE token_digest = ?`).get(tokenDigest(token)) : null;
+    const row = token ? database.prepare(`SELECT t.id, t.organization_id, t.label, t.role, t.active, t.expires_at,
+      o.slug AS organization_slug FROM api_tokens t JOIN organizations o ON o.id = t.organization_id
+      WHERE t.token_digest = ?`).get(tokenDigest(token)) : null;
     if (!row || row.active !== 1 || row.expires_at <= new Date().toISOString()) {
       return next(new HttpError(401, "UNAUTHENTICATED", "A valid active API token is required"));
     }
-    req.principal = { tokenId: row.id, organizationId: row.organization_id, label: row.label, role: row.role };
+    req.principal = { authType: "API_TOKEN", tokenId: row.id, organizationId: row.organization_id,
+      organizationSlug: row.organization_slug, label: row.label, role: row.role };
     next();
   }
   const roles = (...allowed) => (req, _res, next) => allowed.includes(req.principal.role)
     ? next() : next(new HttpError(403, "FORBIDDEN", "This token role cannot perform that action"));
 
   app.use("/v1", authenticate);
+  app.get("/v1/auth/me", (req, res, next) => {
+    if (req.principal.authType !== "SESSION") return next(new HttpError(403, "SESSION_REQUIRED", "Credential session authentication is required"));
+    res.json(identityBody(req.principal));
+  });
+  app.post("/v1/auth/logout", (req, res, next) => {
+    if (req.principal.authType !== "SESSION") return next(new HttpError(403, "SESSION_REQUIRED", "Credential session authentication is required"));
+    revokeCredentialSession(database, req.principal.sessionId);
+    res.status(204).end();
+  });
+  app.post("/v1/ai/ask", asyncRoute(async (req, res) => {
+    if (req.principal.authType !== "SESSION") throw new HttpError(403, "SESSION_REQUIRED", "Credential session authentication is required");
+    const parsed = aiRequestSchema.safeParse(req.body);
+    if (!parsed.success) throw new HttpError(400, "INVALID_AI_REQUEST", "prompt must contain between 3 and 12000 characters");
+    const interactionId = randomUUID();
+    const startedAt = new Date();
+    database.prepare(`INSERT INTO ai_interactions
+      (id, organization_id, user_id, session_id, requested_model, prompt, status, started_at)
+      VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?)`)
+      .run(interactionId, req.principal.organizationId, req.principal.userId, req.principal.sessionId,
+        config.openRouterModel, parsed.data.prompt, startedAt.toISOString());
+    try {
+      const provider = await invokeOpenRouter(config, parsed.data.prompt, fetchImplementation);
+      database.prepare(`UPDATE ai_interactions SET provider_receipt = ?, provider_model = ?, output_text = ?,
+        finish_reason = ?, status = 'SUCCEEDED', completed_at = ?, latency_ms = ? WHERE id = ? AND status = 'PENDING'`)
+        .run(provider.receipt, provider.model, provider.output, provider.finishReason,
+          new Date().toISOString(), provider.latencyMs, interactionId);
+      res.json({ interactionId, providerReceipt: provider.receipt, requestedModel: config.openRouterModel,
+        providerModel: provider.model, output: provider.output, finishReason: provider.finishReason });
+    } catch (error) {
+      const code = error instanceof OpenRouterError ? error.code : "AI_PERSISTENCE_FAILED";
+      database.prepare(`UPDATE ai_interactions SET status = 'FAILED', error_code = ?, completed_at = ?, latency_ms = ?
+        WHERE id = ? AND status = 'PENDING'`).run(code, new Date().toISOString(), Date.now() - startedAt.getTime(), interactionId);
+      if (error instanceof OpenRouterError) throw new HttpError(error.status, error.code, error.message);
+      throw error;
+    }
+  }));
+  app.get("/v1/ai/interactions/:interactionId", (req, res, next) => {
+    if (req.principal.authType !== "SESSION") return next(new HttpError(403, "SESSION_REQUIRED", "Credential session authentication is required"));
+    const row = database.prepare(`SELECT id, provider, provider_receipt, requested_model, provider_model, output_text,
+      finish_reason, status, error_code, started_at, completed_at, latency_ms FROM ai_interactions
+      WHERE id = ? AND organization_id = ? AND user_id = ?`)
+      .get(req.params.interactionId, req.principal.organizationId, req.principal.userId);
+    if (!row) return next(new HttpError(404, "AI_INTERACTION_NOT_FOUND", "The AI interaction was not found"));
+    res.json({ interactionId: row.id, provider: row.provider, providerReceipt: row.provider_receipt,
+      requestedModel: row.requested_model, providerModel: row.provider_model, output: row.output_text,
+      finishReason: row.finish_reason, status: row.status, errorCode: row.error_code,
+      startedAt: row.started_at, completedAt: row.completed_at, latencyMs: row.latency_ms });
+  });
   app.post("/v1/matters", roles("AUTHOR"), (req, res, next) => {
     try { send(res, createMatter({ database, config, principal: req.principal, key: req.get("Idempotency-Key"), body: req.body })); } catch (error) { next(error); }
   });

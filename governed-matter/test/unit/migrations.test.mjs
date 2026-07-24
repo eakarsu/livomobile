@@ -8,7 +8,7 @@ test("repeat migrations are stable and checksum drift fails closed", () => {
   try {
     migrate(database, new Date("2026-07-20T00:00:00Z"));
     migrate(database, new Date("2026-07-20T00:00:01Z"));
-    assert.deepEqual(verifyMigrations(database), { ok: true, count: 1 });
+    assert.deepEqual(verifyMigrations(database), { ok: true, count: 2 });
     database.prepare("UPDATE schema_migrations SET checksum = ?").run("0".repeat(64));
     assert.equal(verifyMigrations(database).ok, false);
     assert.throws(() => migrate(database), /checksum mismatch/);
