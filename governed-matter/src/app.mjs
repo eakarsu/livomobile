@@ -66,6 +66,19 @@ export function createApp({ database, config, fetchImplementation = fetch, logge
     res.status(ready ? 200 : 503).json({ status: ready ? "ready" : "not_ready", migrations, activeTokens: Number(activeTokens) });
   });
 
+  app.get("/v1/auth/demo-credentials", (_req, res, next) => {
+    if (config.nodeEnv === "production") {
+      return next(new HttpError(404, "NOT_FOUND", "Demo credentials are unavailable in production"));
+    }
+    const email = process.env.ADMIN_EMAIL?.trim();
+    const password = process.env.ADMIN_PASSWORD;
+    if (!email || !password) {
+      return next(new HttpError(503, "DEMO_CREDENTIALS_UNAVAILABLE", "Local demo credentials are not provisioned"));
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.json({ email, password });
+  });
+
   app.post("/v1/auth/login", (req, res, next) => {
     try {
       const parsed = loginSchema.safeParse(req.body);
